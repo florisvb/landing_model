@@ -4,6 +4,7 @@ import numpy as np
 def r(phi):
         return 0
         
+# function for STRIPE FIXATION
 def D(phi, sharpness=1):
     if 0:
         def func(x):
@@ -27,6 +28,25 @@ def D(phi, sharpness=1):
     else:
         val = func(phi)
         return val 
+        
+# function for COLLISION AVOIDANCE
+def ColAvoid(phi, sharpness=1):
+    if 1:
+        def func(x):
+        
+            if np.abs(x) >= np.pi:
+                x = np.pi*np.sign(x)
+        
+            return -1*np.sin(x)
+
+
+    if type(phi) is list:
+        val = [func(x) for x in phi]
+        return val
+    else:
+        val = func(phi)
+        return val 
+        
     
 def N(phi):
     return 0
@@ -126,13 +146,28 @@ class Fly:
                         [ori_dot],
                      ])
         
-        # angular dynamics from Reichardt and Poggio, 1976
-        A = np.array(  [[0.,    1.],
-                        [0.,    -self.k/self.rotmom],
-                        ])
-        b = np.array(  [[0],
-                        [N(phi) + D(phi)/self.rotmom + r(phi)/self.rotmom],
-                        ])
+        # angular dynamics for stripe fixation from Reichardt and Poggio, 1976
+        if 0:
+            A = np.array(  [[0.,    1.],
+                            [0.,    -self.k/self.rotmom],
+                            ])
+            b = np.array(  [[0],
+                            [N(phi) + D(phi)/self.rotmom + r(phi)/self.rotmom],
+                            ])
+     
+        # angular dynamics for collision avoidance, from Tammaro and Dickinson 2002 JEB
+        if 1:
+            A = np.array(  [[0.,    1.],
+                            [0.,    -self.k/self.rotmom],
+                            ])
+            b = np.array(  [[0],
+                            [N(phi) + ColAvoid(phi)/self.rotmom + r(phi)/self.rotmom],
+                            ])         
+                            
+            size_factor = 1 / (np.pi - fly.angle_subtended[step-1])
+            expansion_factor = 2*(np.abs(fly.expansion[step-1])/np.pi)
+            b *= expansion_factor
+                        
                         
         sdot = np.dot(A,s) + b
         new_s = s + dt*sdot  
@@ -160,8 +195,8 @@ class Fly:
         
 if __name__ == '__main__':
                 
-    post = Post(radius=0.1)
-    fly = Fly(post, initial_pos=[-.01,-0.01], initial_vel=[0.01,0.0], initial_ori=0, dt=0.005, simlen=1000)
+    post = Post(radius=0.01)
+    fly = Fly(post, initial_pos=[-.01,-0.01], initial_vel=[0.01,0.01], initial_ori=0, dt=0.005, simlen=300)
 
     fly.solve()
         
